@@ -1,114 +1,196 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useState, useEffect } from "react";
+import axios from "axios";
+import WordCard from "../components/WordCard";
 
 export default function Home() {
-  return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [words, setWords] = useState([]);
+  const [newWord, setNewWord] = useState("");
+  const [definition, setDefinition] = useState("");
+  const [synonyms, setSynonyms] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [token, setToken] = useState(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Persist token
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+    }
+  }, []);
+
+  // Fetch words when token changes
+  useEffect(() => {
+    const fetchWords = async () => {
+      if (!token) return;
+      try {
+        const res = await axios.get("/api/words/getWords", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setWords(res.data);
+      } catch (err) {
+        console.error(err.response?.data || err.message);
+      }
+    };
+    fetchWords();
+  }, [token]);
+
+  const handleRegister = async () => {
+    try {
+      const res = await axios.post("/api/auth/register", { email, password });
+      setToken(res.data.token);
+      localStorage.setItem("token", res.data.token);
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      alert("Registration failed");
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      const res = await axios.post("/api/auth/login", { email, password });
+      setToken(res.data.token);
+      localStorage.setItem("token", res.data.token);
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      alert("Login failed");
+    }
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    localStorage.removeItem("token");
+    setWords([]);
+    alert("Logged out successfully");
+  };
+  const handleAddWord = async () => {
+    if (!token) {
+      alert("You must be logged in to add words");
+      return;
+    }
+    try {
+      const synonymList = synonyms
+        ? synonyms.split(",").map((syn) => syn.trim())
+        : [];
+      const res = await axios.post(
+        "/api/words/addWord",
+        { word: newWord, definition, synonyms: synonymList },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const addedWord = {
+        word: newWord, // Ensure we are passing the right word
+        definition: definition || "No definition provided",
+        synonyms: synonymList,
+        dateAdded: res.data.dateAdded
+          ? new Date(res.data.dateAdded).toLocaleDateString()
+          : "Unknown Date",
+      };
+
+      // Immediately update the words state to include the new word
+      setWords((prevWords) => [...prevWords, addedWord]);
+
+      // Clear input fields after adding the word
+      setNewWord("");
+      setDefinition("");
+      setSynonyms("");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add word");
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Personal Dictionary</h1>
+      {!token ? (
+        <div className="mb-4">
+          <h2 className="text-lg font-bold mb-2">Login or Register</h2>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="border p-2 w-full mb-2"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border p-2 w-full mb-2"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleRegister}
+              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Register
+            </button>
+            <button
+              onClick={handleLogin}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Login
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+              Logout
+            </button>
+          </div>
+
+          <div className="mb-4">
+            <div className="flex flex-col md:flex-row gap-2 mb-4">
+              <input
+                type="text"
+                placeholder="New Word"
+                value={newWord}
+                onChange={(e) => setNewWord(e.target.value)}
+                className="border p-2 flex-1"
+              />
+              <input
+                type="text"
+                placeholder="Definition"
+                value={definition}
+                onChange={(e) => setDefinition(e.target.value)}
+                className="border p-2 flex-1"
+              />
+              <input
+                type="text"
+                placeholder="Synonyms (comma-separated)"
+                value={synonyms}
+                onChange={(e) => setSynonyms(e.target.value)}
+                className="border p-2 flex-1"
+              />
+            </div>
+            <button
+              onClick={handleAddWord}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Add Word
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {words.map((word, index) => (
+              <WordCard
+                key={index}
+                word={word.word || "Unknown"}
+                definition={word.definition || "No definition provided"}
+                synonyms={Array.isArray(word.synonyms) ? word.synonyms : []}
+                dateAdded={word.dateAdded || "Unknown Date"}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
