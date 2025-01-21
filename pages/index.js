@@ -63,6 +63,7 @@ export default function Home() {
     setWords([]);
     alert("Logged out successfully");
   };
+
   const handleAddWord = async () => {
     if (!token) {
       alert("You must be logged in to add words");
@@ -79,7 +80,7 @@ export default function Home() {
       );
 
       const addedWord = {
-        word: newWord, // Ensure we are passing the right word
+        word: newWord,
         definition: definition || "No definition provided",
         synonyms: synonymList,
         dateAdded: res.data.dateAdded
@@ -101,35 +102,35 @@ export default function Home() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Personal Dictionary</h1>
+    <div className="container mx-auto p-6 bg-white text-gray-800 font-sans">
+      <h1 className="text-3xl font-semibold mb-6 text-blue-600">Personal Dictionary</h1>
       {!token ? (
-        <div className="mb-4">
-          <h2 className="text-lg font-bold mb-2">Login or Register</h2>
+        <div className="mb-6 bg-gray-50 p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">Login or Register</h2>
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="border p-2 w-full mb-2"
+            className="border border-gray-300 p-3 w-full mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="border p-2 w-full mb-2"
+            className="border border-gray-300 p-3 w-full mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <div className="flex gap-2">
+          <div className="flex gap-4">
             <button
               onClick={handleRegister}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              className="bg-green-500 text-white px-6 py-3 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               Register
             </button>
             <button
               onClick={handleLogin}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Login
             </button>
@@ -137,48 +138,48 @@ export default function Home() {
         </div>
       ) : (
         <>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-6">
             <button
               onClick={handleLogout}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              className="bg-red-500 text-white px-6 py-3 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               Logout
             </button>
           </div>
 
-          <div className="mb-4">
-            <div className="flex flex-col md:flex-row gap-2 mb-4">
+          <div className="mb-6 bg-gray-50 p-6 rounded-lg shadow-md">
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
               <input
                 type="text"
                 placeholder="New Word"
                 value={newWord}
                 onChange={(e) => setNewWord(e.target.value)}
-                className="border p-2 flex-1"
+                className="border border-gray-300 p-3 flex-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="text"
                 placeholder="Definition"
                 value={definition}
                 onChange={(e) => setDefinition(e.target.value)}
-                className="border p-2 flex-1"
+                className="border border-gray-300 p-3 flex-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="text"
                 placeholder="Synonyms (comma-separated)"
                 value={synonyms}
                 onChange={(e) => setSynonyms(e.target.value)}
-                className="border p-2 flex-1"
+                className="border border-gray-300 p-3 flex-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <button
               onClick={handleAddWord}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Add Word
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {words.map((word, index) => (
               <WordCard
                 key={index}
